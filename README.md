@@ -164,124 +164,13 @@ The C++ backend listens on `0.0.0.0` (using the `PORT` environment variable, def
 
 ---
 
-## 🎓 6. B.Tech CSE Viva Voce Question Bank (15 High-Yield Q&As)
+## 💻 6. Local Build & Execution Guide
 
-### Q1: Why is a Doubly Circular Linked List the ideal data structure for a music player?
-> **Answer:** In a real-world music player, playlists require:
-> 1. Continuous forward looping (song after the last track is the first track).
-> 2. Continuous backward looping (previous track from the first track is the last track).
-> 3. Frequent user insertions and deletions anywhere in the queue without shifting large memory blocks.
-> In a static array or standard vector, inserting/deleting in the middle requires $O(N)$ memory element shifts. In a Singly Linked List, navigating backwards requires an $O(N)$ traversal from the head. A Doubly Circular Linked List provides **true $O(1)$ forward and backward navigation** and **$O(1)$ node splicing** directly through pointers without needing index boundary checks or modulo arithmetic.
-
----
-
-### Q2: What happens when the playlist has only 1 song and `nextSong()` or `prevSong()` is called?
-> **Answer:** For a single-node list:
-> - `head == tail == current == node`
-> - `node->next == node`
-> - `node->prev == node`
-> When `nextSong()` or `prevSong()` is invoked, `current = current->next` (or `current->prev`) simply returns the same node, safely looping on itself without segfaults or null pointer dereferences.
-
----
-
-### Q3: How do you prevent an infinite loop during traversal or destructor cleanup?
-> **Answer:**
-> - **During search/display:** We do not loop until a `nullptr` because circular lists have no null terminator. Instead, we use either a bounded iteration `for (int i = 0; i < songCount; ++i)` or stop when `curr->next == head`.
-> - **During destruction (`clear()`):** We first break the circle by setting `tail->next = nullptr;`. This temporarily converts the circular list into a standard linear doubly linked list, allowing a standard `while (curr != nullptr)` loop to safely `delete` each node sequentially.
-
----
-
-### Q4: Explain the pointer steps when deleting the `HEAD` node in a multi-node circular list.
-> **Answer:**
-> 1. Identify target: `SongNode* target = head;`
-> 2. Advance head: `head = target->next;`
-> 3. Reconnect tail's next pointer: `tail->next = head;`
-> 4. Reconnect new head's prev pointer: `head->prev = tail;`
-> 5. If `current == target`, advance `current = head;`
-> 6. Deallocate memory: `delete target;`
-> 7. Decrement node count: `songCount--;`
-
----
-
-### Q5: Explain the pointer steps when deleting the `TAIL` node in a multi-node circular list.
-> **Answer:**
-> 1. Identify target: `SongNode* target = tail;`
-> 2. Retreat tail: `tail = target->prev;`
-> 3. Reconnect new tail's next pointer: `tail->next = head;`
-> 4. Reconnect head's prev pointer: `head->prev = tail;`
-> 5. If `current == target`, retreat `current = tail;`
-> 6. Deallocate memory: `delete target;`
-> 7. Decrement node count: `songCount--;`
-
----
-
-### Q6: What is the space complexity of each `SongNode`?
-> **Answer:** The space complexity is $O(1)$ per node. Beyond the payload data (strings and integers), each node requires two pointer fields (`next` and `prev`). On a 64-bit architecture, each pointer occupies 8 bytes (total 16 bytes overhead per node). This small constant overhead allows instantaneous bidirectional navigation.
-
----
-
-### Q7: What is the difference between shallow copy and deep copy in linked lists?
-> **Answer:** A shallow copy copies only pointer addresses (`head_copy = head`), causing both pointers to reference the identical memory. Deleting one list results in a dangling pointer in the other and triggers a catastrophic double-free error. A deep copy allocates new heap memory for every single node and copies data values independently. In DHUN, copy constructors are marked `= delete` to strictly enforce single-ownership pointer safety.
-
----
-
-### Q8: How does the C++ backend interface with the web frontend?
-> **Answer:** DHUN implements a custom multi-threaded HTTP/1.1 REST server in C++ using native Winsock (`ws2_32.lib`) on Windows and POSIX BSD sockets on Linux. Incoming browser requests (via JavaScript `fetch()`) are parsed by method and path. The server acquires a `std::mutex` lock, executes the corresponding linked-list pointer operation, serializes the resulting node DTOs into JSON, and returns standard HTTP status codes (`200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found`).
-
----
-
-### Q9: Why is `std::mutex` required in the C++ backend?
-> **Answer:** The HTTP server is multi-threaded, spawning worker threads for concurrent client requests (such as static asset loading, polling, and button clicks). If two threads modify the linked list pointers simultaneously (e.g. deleting a node while another traverses it), a **race condition** occurs, leading to memory corruption or segmentation faults. A `std::mutex` with `std::lock_guard` ensures atomic, thread-safe access to the linked list.
-
----
-
-### Q10: How does DHUN ensure audio playback without external streaming dependencies?
-> **Answer:** DHUN incorporates an integrated **Web Audio API synthesizer**. Each song has a thematic preset (e.g., sunset, neon, monsoon, coffee) with defined chord frequencies and basslines. The browser generates harmonic polyphonic oscillator pads dynamically, synchronized with an interactive frequency equalizer bar visualizer and an auto-advance handler.
-
----
-
-### Q11: How do you verify that circular invariants hold after every mutation?
-> **Answer:** The class includes a `verifyInvariants()` member function:
-> - Checks that `tail->next == head` and `head->prev == tail`.
-> - Traverses forward exactly `songCount` times and ensures it lands back on `head`.
-> - Checks that for every node: `node->next->prev == node` and `node->prev->next == node`.
-> - Automated unit tests in `tests/test_playlist.cpp` validate this across all operations.
-
----
-
-### Q12: What is the time complexity of searching a song by ID vs by Title?
-> **Answer:** Both operations are $O(N)$ in the worst case, as they require linear traversal across the circular chain from `head` to `tail`. However, ID search compares single integer values ($O(1)$ per node), whereas Title search performs case-insensitive substring comparisons ($O(M)$ where $M$ is string length).
-
----
-
-### Q13: Can a Doubly Circular Linked List be converted into a Queue or Deque?
-> **Answer:** Yes. A Doubly Circular Linked List can act as a Double-Ended Queue (Deque) with $O(1)$ operations at both ends:
-> - `push_back`: Add to tail (`O(1)`).
-> - `pop_front`: Delete head (`O(1)`).
-> - `push_front`: Add before head (`O(1)`).
-> - `pop_back`: Delete tail (`O(1)`).
-
----
-
-### Q14: How does memory fragmentation affect linked lists compared to vectors?
-> **Answer:** In a vector, elements are contiguous in virtual memory, providing excellent CPU cache locality. In a linked list, nodes are individually allocated on the heap via `new`, which can cause memory fragmentation and cache misses during random traversals. However, for a music playlist where navigation is strictly sequential and track counts typically range from dozens to thousands, cache misses are negligible and outweighed by $O(1)$ structural modifications.
-
----
-
-### Q15: How does the application deploy to cloud platforms like Render or Docker?
-> **Answer:** A multi-stage `Dockerfile` is provided:
-> 1. **Builder Stage:** Uses `gcc:12-bookworm` with CMake to compile the C++ source code into a native ELF binary (`dhun_server`) and runs unit tests.
-> 2. **Runner Stage:** Uses a minimal `debian:bookworm-slim` image, copies only the compiled binary and `./public` static files, binds to `0.0.0.0:$PORT`, and provides a `/health` endpoint for uptime monitoring.
-
----
-
-## 💻 7. Local Build & Execution Guide
-
-### 7.1 Prerequisites
+### 6.1 Prerequisites
 - A modern C++17 compiler: **GCC (v9+)**, **Clang (v10+)**, or **MSVC (VS 2019+)**.
 - **CMake (v3.14+)** (optional but recommended).
 
-### 7.2 Windows Quick Start (Using Batch Scripts)
+### 6.2 Windows Quick Start (Using Batch Scripts)
 We provide automated helper scripts that build and run the project immediately:
 
 ```cmd
@@ -296,7 +185,7 @@ run_server.bat
 ```
 Then open your web browser at: **`http://localhost:8080`**.
 
-### 7.3 Standard CMake Build (Linux / macOS / Windows)
+### 6.3 Standard CMake Build (Linux / macOS / Windows)
 
 ```bash
 # 1. Create build directory and generate Makefiles
@@ -311,33 +200,9 @@ cmake --build build --config Release
 # 4. Launch the DHUN Server
 ./build/dhun_server 8080
 ```
-
 ---
 
-## 🐳 8. Docker & Cloud Deployment (Render.com)
-
-### 8.1 Local Docker Execution
-
-```bash
-# 1. Build the Docker container image
-docker build -t dhun-playlist .
-
-# 2. Run container binding to port 8080
-docker run -p 8080:8080 -e PORT=8080 dhun-playlist
-```
-Visit `http://localhost:8080` in your browser.
-
-### 8.2 One-Click Deployment to Render.com
-1. Push this repository to your GitHub account.
-2. Log into [Render.com](https://render.com) and click **New +** -> **Web Service**.
-3. Connect your GitHub repository.
-4. Select **Docker** as the Runtime environment.
-5. Render will automatically detect the `Dockerfile`, inject the `PORT` environment variable, run the test suite during build, and launch `dhun_server`.
-6. Use the `/health` endpoint for health checks.
-
----
-
-## 🧪 9. Automated DSA Unit Test Suite
+## 🧪 7. Automated DSA Unit Test Suite
 
 The test suite in `tests/test_playlist.cpp` rigorously asserts all requirements:
 1. `testEmptyList()`: Validates pointers on empty initialization (`head == tail == current == nullptr`).
@@ -353,7 +218,7 @@ Run tests anytime with:
 
 ---
 
-## 📂 10. Project Directory Layout
+## 📂 8. Project Directory Layout
 
 ```
 Dhun/
@@ -389,7 +254,7 @@ Dhun/
 
 ---
 
-## 🏆 11. Academic Integrity & Project Credits
+## 🏆 9. Academic Integrity & Project Credits
 - **Project Title:** DHUN – Music Playlist Management System
 - **Curriculum:** Data Structures and Algorithms (DSA) – B.Tech CSE
 - **Data Structure:** Doubly Circular Linked List (Non-STL, Pure Pointers)
