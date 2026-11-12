@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DHUN – Music Playlist Management System</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='28' fill='%23FFC8DD'/><circle cx='50' cy='50' r='38' fill='%23BDE0FE'/><text x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='50'>🎵</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="pastel-theme">
+  <div class="app-layout">
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h2>DHUN</h2>
+          <span class="tag">DSA v1.0 • C++17</span>
+        </div>
+        <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">&times;</button>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="playlist-view">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          <span>Playlist</span>
+          <span class="badge" id="sidebar-song-count">0</span>
+        </button>
+
+        <button class="nav-item" data-tab="visualizer-view">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+          <span>Linked List Visualizer</span>
+          <span class="badge pulse">Live</span>
+        </button>
+      </nav>
+
+      <!-- DSA Invariant Monitor Panel -->
+      <div class="sidebar-card">
+        <div class="card-title">
+          <span class="indicator green"></span>
+          <h4>Circular Invariants</h4>
+        </div>
+        <div class="card-metric">
+          <span class="label">Head Node:</span>
+          <span class="value code" id="monitor-head">--</span>
+        </div>
+        <div class="card-metric">
+          <span class="label">Tail Node:</span>
+          <span class="value code" id="monitor-tail">--</span>
+        </div>
+        <div class="card-metric">
+          <span class="label">Current Node:</span>
+          <span class="value code highlight" id="monitor-current">--</span>
+        </div>
+        <div class="card-metric">
+          <span class="label">Loop Check:</span>
+          <span class="value tag-ok" id="monitor-loop">tail &rarr; head OK</span>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="sidebar-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-reset-demo" title="Restore default tracks">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          Reset Demo
+        </button>
+        <button class="btn btn-primary btn-sm" id="btn-open-add-modal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Song
+        </button>
+      </div>
+
+      <!-- System Status Footer -->
+      <div class="sidebar-footer">
+        <div class="backend-status">
+          <span class="status-dot online" id="status-dot"></span>
+          <span id="status-text">C++17 Backend Online</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar: Search, Stats, & Actions -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open navigation menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div class="search-container">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="search-input" placeholder="Search playlist by ID, title or artist (C++ search)..." autocomplete="off">
+            <button class="search-clear hidden" id="search-clear">&times;</button>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="btn btn-outline" id="btn-open-delete-modal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Delete Song
+          </button>
+          <button class="btn btn-primary" id="btn-header-add">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            New Song Node
+          </button>
+        </div>
+      </header>
+
+      <!-- View Container -->
+      <div class="views-wrapper">
+        <!-- 1. PLAYLIST VIEW TAB -->
+        <section id="playlist-view" class="tab-view active">
+          <!-- Hero Section: Currently Playing Song Banner -->
+          <div class="hero-banner" id="hero-banner">
+            <div class="hero-cover-wrapper">
+              <div class="hero-cover" id="hero-cover-art">
+                <div class="vinyl-disc" id="vinyl-disc"></div>
+                <div class="cover-gradient" id="hero-gradient">🎵</div>
+              </div>
+            </div>
+
+            <div class="hero-details">
+              <div class="badge-row">
+                <span class="badge badge-accent">Doubly Circular Node</span>
+                <span class="badge" id="hero-node-id">ID: #--</span>
+                <span class="badge badge-subtle" id="hero-node-position">Head Node</span>
+              </div>
+              <h1 class="hero-title" id="hero-title">Select or Add a Song</h1>
+              <p class="hero-artist" id="hero-artist">No artist selected</p>
+
+              <!-- Node Linkage Badges -->
+              <div class="node-pointers-bar">
+                <div class="pointer-item">
+                  <span class="pointer-arrow">&larr; Prev Node:</span>
+                  <span class="pointer-val code" id="hero-prev-node">--</span>
+                </div>
+                <div class="pointer-divider">&bull;</div>
+                <div class="pointer-item">
+                  <span class="pointer-arrow">Next Node &rarr;:</span>
+                  <span class="pointer-val code" id="hero-next-node">--</span>
+                </div>
+              </div>
+
+              <!-- Animated Equalizer Soundbars -->
+              <div class="equalizer-bars" id="equalizer-bars">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Playlist Table Header -->
+          <div class="playlist-header-row">
+            <div class="playlist-heading">
+              <h3>Playlist Tracks</h3>
+              <p class="subtext">Ordered according to C++ Doubly Circular Linked List pointers</p>
+            </div>
+            <div class="playlist-stats">
+              <span class="stat-pill"><strong id="stat-song-count">0</strong> songs</span>
+              <span class="stat-pill"><strong id="stat-total-time">0m 0s</strong> total duration</span>
+            </div>
+          </div>
+
+          <!-- Playlist Items Container -->
+          <div class="song-table-container">
+            <table class="song-table" id="song-table">
+              <thead>
+                <tr>
+                  <th class="th-index">#</th>
+                  <th class="th-id">Node ID</th>
+                  <th class="th-title">Title & Artist</th>
+                  <th class="th-prev">Prev Node</th>
+                  <th class="th-next">Next Node</th>
+                  <th class="th-duration">Duration</th>
+                  <th class="th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="playlist-tbody">
+                <!-- Dynamically populated rows from C++ backend -->
+              </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div class="empty-state hidden" id="empty-state">
+              <div class="empty-icon">🎧</div>
+              <h3>Playlist is Empty</h3>
+              <p>Your Doubly Circular Linked List currently has 0 nodes (head = tail = nullptr).</p>
+              <button class="btn btn-primary" id="btn-empty-add">Add Your First Song</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. LINKED LIST VISUALIZER TAB -->
+        <section id="visualizer-view" class="tab-view">
+          <div class="visualizer-intro">
+            <div class="visualizer-header">
+              <h2>Doubly Circular Linked List Graph</h2>
+              <p>Real-time visual memory representation of nodes and bidirectional pointers directly from C++17 memory.</p>
+            </div>
+            <div class="visualizer-legend">
+              <span class="legend-item"><span class="dot head-dot"></span> Head Node</span>
+              <span class="legend-item"><span class="dot tail-dot"></span> Tail Node</span>
+              <span class="legend-item"><span class="dot current-dot"></span> Current Song</span>
+              <span class="legend-item"><span class="arrow-legend forward"></span> next pointer (&rarr;)</span>
+              <span class="legend-item"><span class="arrow-legend backward"></span> prev pointer (&larr;)</span>
+            </div>
+          </div>
+
+          <!-- Circular Loopback Banner -->
+          <div class="circular-indicator-box">
+            <div class="indicator-icon">&infin;</div>
+            <div class="indicator-text">
+              <strong>Circular Invariant:</strong>
+              <code>tail-&gt;next = head</code> (Forward circular wrap) &amp;
+              <code>head-&gt;prev = tail</code> (Backward circular wrap).
+              No <code>nullptr</code> termination!
+            </div>
+          </div>
+
+          <!-- Interactive Node Canvas -->
+          <div class="graph-scroll-container">
+            <div class="nodes-chain" id="nodes-chain">
+              <!-- Rendered node cards with bidirectional arrows -->
+            </div>
+          </div>
+
+          <!-- Node Operations Log Console -->
+          <div class="console-box">
+            <div class="console-header">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+              <span>DSA Operation &amp; Pointer Log</span>
+              <button class="console-clear" id="console-clear">Clear</button>
+            </div>
+            <div class="console-body" id="console-log">
+              <div class="log-line info">[INIT] DoublyCircularLinkedList initialized with head, tail, current pointers.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Bottom Audio Player Control Bar -->
+      <footer class="player-bar">
+        <!-- Currently Playing Mini Info -->
+        <div class="player-track-info">
+          <div class="player-cover" id="player-cover-art">🎵</div>
+          <div class="player-meta">
+            <span class="player-title" id="player-title">No Song Selected</span>
+            <span class="player-artist" id="player-artist">Tap Next or Play to Start</span>
+          </div>
+        </div>
+
+        <!-- Center Playback Controls -->
+        <div class="player-controls-center">
+          <div class="control-buttons">
+            <button class="ctrl-btn" id="ctrl-prev" title="Previous Song (Circular &larr; tail if at head)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"></line></svg>
+            </button>
+            <button class="ctrl-btn btn-play-main" id="ctrl-play" title="Play / Pause">
+              <svg id="icon-play" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <svg id="icon-pause" class="hidden" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </button>
+            <button class="ctrl-btn" id="ctrl-next" title="Next Song (Circular &rarr; head if at tail)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
+            </button>
+            <button class="ctrl-btn ctrl-badge active" id="ctrl-circular" title="Circular Loop is Always Active in Doubly Circular Linked List">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            </button>
+          </div>
+
+          <!-- Progress Bar & Timestamps -->
+          <div class="player-progress-bar">
+            <span class="time-stamp" id="time-current">0:00</span>
+            <div class="progress-track" id="progress-track">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <span class="time-stamp" id="time-total">0:00</span>
+          </div>
+        </div>
+
+        <!-- Volume & Quick Settings -->
+        <div class="player-extra-controls">
+          <button class="ctrl-btn-mini" id="btn-volume-icon" title="Mute/Unmute">
+            <svg id="icon-vol-high" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <svg id="icon-vol-mute" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+          </button>
+          <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="0.8">
+          <span class="dsa-indicator" title="C++ Circular Traversal Active">C++ DCLL</span>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- MODAL: ADD SONG -->
+  <div class="modal-overlay hidden" id="modal-add-song">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add New Song Node</h3>
+        <button class="modal-close" id="modal-add-close">&times;</button>
+      </div>
+      <form id="form-add-song">
+        <div class="form-group">
+          <label for="input-add-title">Song Title *</label>
+          <input type="text" id="input-add-title" placeholder="e.g. Bohemian Rhapsody" required>
+        </div>
+        <div class="form-group">
+          <label for="input-add-artist">Artist / Composer *</label>
+          <input type="text" id="input-add-artist" placeholder="e.g. Queen" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="input-add-duration">Duration (seconds) *</label>
+            <input type="number" id="input-add-duration" min="1" max="3600" value="180" required>
+          </div>
+          <div class="form-group">
+            <label for="input-add-id">Custom Node ID (Optional)</label>
+            <input type="number" id="input-add-id" placeholder="Auto-generated if blank">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="select-add-theme">Artwork &amp; Synth Style</label>
+          <select id="select-add-theme">
+            <option value="sunset">Sunset Glow (Warm Ambient Synth)</option>
+            <option value="neon">Neon Cyber (Electronic Basswave)</option>
+            <option value="monsoon">Monsoon Rain (Acoustic Pluck Raga)</option>
+            <option value="aurora">Aurora Borealis (Cosmic Pad)</option>
+            <option value="coffee">Coffee Lofi (Gentle Chords)</option>
+            <option value="galaxy">Deep Galaxy (Sub Bass &amp; Pulse)</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-add-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Node to Tail</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DELETE SONG -->
+  <div class="modal-overlay hidden" id="modal-delete-song">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Delete Song Node</h3>
+        <button class="modal-close" id="modal-del-close">&times;</button>
+      </div>
+      <form id="form-delete-song">
+        <p class="modal-desc">Delete a song from the Doubly Circular Linked List by its unique ID or by title. Pointers of surrounding nodes will automatically reconnect.</p>
+        <div class="form-group">
+          <label for="input-del-id">Delete by Node ID:</label>
+          <input type="number" id="input-del-id" placeholder="e.g. 102">
+        </div>
+        <div class="divider-text"><span>OR</span></div>
+        <div class="form-group">
+          <label for="input-del-title">Delete by Title:</label>
+          <input type="text" id="input-del-title" placeholder="e.g. Neon Pulse">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-del-cancel">Cancel</button>
+          <button type="submit" class="btn btn-danger">Delete Node</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/visualizer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+.tools/
+build/
+build_cmake/
+*.exe
+*.obj
+*.o
+*.a
+*.pdb
+*.ilk
+.vscode/
+.idea/
+server_out.txt
+server_err.txt
